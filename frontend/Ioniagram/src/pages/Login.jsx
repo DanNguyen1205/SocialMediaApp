@@ -7,7 +7,8 @@ import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
 import "../main.css"
 import axios, * as others from "axios"
-
+import { useAuth } from "../components/auth" 
+ 
 var sectionStyle = {
   width: "100%",
   height: "100%",
@@ -26,12 +27,16 @@ export const Login = () => {
   });
 
   const navigate = useNavigate();
+  const auth = useAuth();
 
   async function onSubmit(data) {
     console.log(data);
 
     axios.post("http://localhost:8081/Ioniagram/Login", data)
-    .then(res => navigate("/Ioniagram/Home"))
+    .then((res) =>{ 
+      auth.login(data)
+      navigate("/Ioniagram", {replace:true})
+    })
     .catch(err => console.log(err))
   }
 

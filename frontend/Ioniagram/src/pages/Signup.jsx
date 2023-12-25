@@ -87,7 +87,7 @@ export const Signup = () => {
               <button type='submit' className='bg-blue-200 p-2'>Create account</button>
               <div className='flex space-x-5'>
               <p>Already have an account?</p>
-              <Link to="/Ioniagram" className='font-semibold'>Login</Link>
+              <Link to="/Ioniagram/Login" className='font-semibold'>Login</Link>
             </div>
             </form>
           </div>

@@ -32,8 +32,10 @@ app.post('/Ioniagram/Signup', (req, res) => {
 
     //Check if email already exist in DB
     db.query(sqlQueryEmail, [req.body.email], (err, data) => {
+        console.log(process.env.user);
+
         if (err) {
-            console.log(err)
+            console.log("Signup error 1" + err)
             return res.json(err)
         } else {
             //If it does not exist insert into DB
@@ -41,7 +43,7 @@ app.post('/Ioniagram/Signup', (req, res) => {
                 console.log("Email does not already exist, inserting into DB:")
                 db.query(sql, [values], (err, data) => {
                     if (err) {
-                        console.log(err)
+                        console.log("Signup error 2" + err)
                         return res.json(err)
                     }
                     return res.json(data);

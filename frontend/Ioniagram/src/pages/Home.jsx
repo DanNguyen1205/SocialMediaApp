@@ -1,10 +1,20 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faImage, faFaceSmile, faMagnifyingGlass, faHouse } from '@fortawesome/free-solid-svg-icons'
 import IoniaIcon from "../images/Ionia_Crest_icon.webp"
 import "../main.css"
+import { useAuth } from '../components/auth'
+import { useNavigate } from 'react-router-dom'
 
 export const Home = () => {
+  const auth = useAuth();
+  const navigate = useNavigate();
+  
+  const handleLogout = () => {
+    auth.logout();
+    navigate("/Ioniagram/Login")
+  }
+
   return (
     <>
     {/* First section of page. Contains icons such as home and search options. */}
@@ -32,6 +42,10 @@ export const Home = () => {
           <FontAwesomeIcon icon={faMagnifyingGlass} style={{width:"full", color: "#cdd9ed"}}/>
         </div>
 
+        <button onClick={handleLogout} class="mr-10 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">              
+          Logout
+        </button>
+
       </div>
 
       {/* Middle section of page. Contains create new post and posts from other users */}
@@ -43,7 +57,6 @@ export const Home = () => {
               <div id="postOptionsIcons">
               <button className=''>
               <FontAwesomeIcon icon={faImage} style={{ height: "2rem", width: "2rem", color: "#cdd9ed", marginRight:"10px"}} />
-
               </button>
               <button>
               <FontAwesomeIcon icon={faFaceSmile} style={{height: "2rem", width: "2rem", color: "#cdd9ed",}} />              
