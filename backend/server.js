@@ -1,12 +1,41 @@
+const multer  = require('multer')
 const express = require("express");
-const mysql = require("mysql");
+const mysql = require("mysql2");
 const cors = require("cors");
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const crypto = require('crypto');  
+const sharp = require('sharp');
+const { runInNewContext } = require('vm');
 require('dotenv').config();
 
 //Config
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+//Multer and S3 setup 
+//Store images in memory not disk
+const storage = multer.memoryStorage()
+const upload = multer({ storage: storage })
+
+upload.single('image')
+
+const bucketName  = process.env.BUCKET_NAME
+const bucketRegion = process.env.BUCKET_REGION
+const accessKey = process.env.ACCESS_KEY
+const secretAccessKey  = process.env.SECRET_ACCESS_KEY
+
+const s3 = new S3Client({
+    credentials: {
+        accessKeyId: accessKey,
+        secretAccessKey: secretAccessKey
+    },
+    region: bucketRegion
+})
+
+//Utility fucntions
+const randomImageName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
+
 
 //Connection
 const db = mysql.createConnection({
@@ -74,13 +103,60 @@ app.post('/Ioniagram/Login', (req, res) => {
             return res.json("Failed login")
         }
     })
+})
 
+app.post('/Ioniagram/Post', upload.single('image'), async (req, res) => {
+    console.log("req.body", req.body)
+    console.log("req.body", req.file)
 
+    //resize image
+    const buffer = await sharp(req.file.buffer).resize({height:1920, width:1080, fit: "contain"}).toBuffer()
 
+    //Use s3 client to send to our s3 bucket. 
+    //Setup a command to use for our s3 client.
 
+    const imageName = randomImageName();
+    const params ={
+        Bucket: bucketName,
+        Key: imageName,
+        Body: buffer,
+        ContentType: req.file.mimetype
+    }
+    const command = new PutObjectCommand(params)
+    await s3.send(command)
 
+    //Send additional info about post to DB
+    const sqlPost = "INSERT INTO posts (`caption`, `imageName`) VALUES (?)";
+    //const sql = "INSERT INTO users (`fullName`, `age`, `email`, `password`) VALUES (?)";
 
+    const values = [
+        req.body.caption,
+        imageName
+    ]
 
+    db.query(sqlPost, [values], (err, data) => {
+        if (err) {
+            console.log("Post error" + err)
+            return res.json(err)
+        }
+        return res.json(data);
+    })
+})
+
+app.get("/Ioniagram/Post", async (req, res) => {
+    //GET POSTS FOR EVERYONE U FOLLOW
+    const posts = [] //GET POSTS HERE
+
+    for(const post of posts){
+        const getObjectParams = {
+            Bucket: bucketName, 
+            Key: post.imageName
+        }
+
+        const command = new GetObjectCommand(getObjetParams)
+        const url = await getSignedUrl(client, command, {expiresIn:3600})
+        post.imageUrl = url;
+    }
 })
 
 
