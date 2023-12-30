@@ -30,11 +30,14 @@ export const Login = () => {
   const auth = useAuth();
 
   async function onSubmit(data) {
-    console.log(data);
 
     axios.post("http://localhost:8081/Ioniagram/Login", data)
     .then((res) =>{ 
       auth.login(data)
+
+      console.log("Saving user ID: " + res.data[0].id);
+      localStorage.setItem("userid", JSON.stringify(res.data[0].id))
+
       navigate("/Ioniagram", {replace:true})
     })
     .catch(err => console.log(err))

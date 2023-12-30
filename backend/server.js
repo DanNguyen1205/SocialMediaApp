@@ -5,7 +5,6 @@ const cors = require("cors");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const crypto = require('crypto');  
 const sharp = require('sharp');
-const { runInNewContext } = require('vm');
 require('dotenv').config();
 
 //Config
@@ -96,7 +95,7 @@ app.post('/Ioniagram/Login', (req, res) => {
         }
         else if(data.length > 0){
             console.log("Login user found")
-            return res.json("Success");
+            return res.json(data);
         }else{
             console.log(data)
             console.log("data")
@@ -144,24 +143,37 @@ app.post('/Ioniagram/Post', upload.single('image'), async (req, res) => {
 })
 
 //Endpoint get posts
-app.get("/Ioniagram/Post/:userId", async (req, res) => {
+app.get("/Ioniagram/GetPosts/", async (req, res) => {
     //Inner join posts and relationships and then get all posts where the followerUserId is of the req.param.userid
-    const sqlGetPosts = "SELECT * FROM posts p INNER JOIN relationships r ON (r.protagUserid = p.userid) WHERE f.followerUserid = ?"
+    const sqlGetPosts = "SELECT * FROM posts p INNER JOIN relationships r ON (r.followedUserid = p.userid) WHERE r.followerUserid = ?"
     
-    
-    
-    const posts = []//GET POSTS FOR EVERYONE U FOLLOW
-
-    for(const post of posts){
-        const getObjectParams = {
-            Bucket: bucketName, 
-            Key: post.imageName
+    db.query(sqlGetPosts, [req.query.userid], (err, data) => {
+        if(err){
+            console.log("Get posts error: " + err)
+            return res.json(err)
+        }else if(data.length > 0){
+            const posts = data //GET POSTS FOR EVERYONE U FOLLOW
+            res.json(posts);
+            console.log("--------------------------------------------------------");
+            console.log(data);
+        }
+        else{
+            return res.json("User does not follow anyone");
         }
 
-        const command = new GetObjectCommand(getObjetParams)
-        const url = await getSignedUrl(client, command, {expiresIn:3600})
-        post.imageUrl = url;
-    }
+    })
+
+
+    // for(const post of posts){
+    //     const getObjectParams = {
+    //         Bucket: bucketName, 
+    //         Key: post.imageName
+    //     }
+
+    //     const command = new GetObjectCommand(getObjetParams)
+    //     const url = await getSignedUrl(client, command, {expiresIn:3600})
+    //     post.imageUrl = url;
+    // }
 })
 
 

@@ -1,8 +1,13 @@
 import React from 'react'
 
-const Post = () => {
+const Post = ({ caption, imageName }) => {
   return (
-    <div>Post</div>
+    <>
+      <div className='bg-blue-900'>
+        <h1>{imageName}</h1>
+        <p>{caption}</p>
+      </div>
+    </>
   )
 }
 
