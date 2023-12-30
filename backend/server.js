@@ -105,6 +105,7 @@ app.post('/Ioniagram/Login', (req, res) => {
     })
 })
 
+//Endpoint post
 app.post('/Ioniagram/Post', upload.single('image'), async (req, res) => {
     console.log("req.body", req.body)
     console.log("req.body", req.file)
@@ -127,7 +128,6 @@ app.post('/Ioniagram/Post', upload.single('image'), async (req, res) => {
 
     //Send additional info about post to DB
     const sqlPost = "INSERT INTO posts (`caption`, `imageName`) VALUES (?)";
-    //const sql = "INSERT INTO users (`fullName`, `age`, `email`, `password`) VALUES (?)";
 
     const values = [
         req.body.caption,
@@ -143,9 +143,14 @@ app.post('/Ioniagram/Post', upload.single('image'), async (req, res) => {
     })
 })
 
-app.get("/Ioniagram/Post", async (req, res) => {
-    //GET POSTS FOR EVERYONE U FOLLOW
-    const posts = [] //GET POSTS HERE
+//Endpoint get posts
+app.get("/Ioniagram/Post/:userId", async (req, res) => {
+    //Inner join posts and relationships and then get all posts where the followerUserId is of the req.param.userid
+    const sqlGetPosts = "SELECT * FROM posts p INNER JOIN relationships r ON (r.protagUserid = p.userid) WHERE f.followerUserid = ?"
+    
+    
+    
+    const posts = []//GET POSTS FOR EVERYONE U FOLLOW
 
     for(const post of posts){
         const getObjectParams = {
