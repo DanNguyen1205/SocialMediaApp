@@ -35,8 +35,8 @@ export const Login = () => {
     .then((res) =>{ 
       auth.login(data)
 
-      console.log("Saving user ID: " + res.data[0].id);
-      localStorage.setItem("userid", JSON.stringify(res.data[0].id))
+      console.log("Saving user ID: " + res.data[0].idusers);
+      localStorage.setItem("userid", JSON.stringify(res.data[0].idusers))
 
       navigate("/Ioniagram", {replace:true})
     })

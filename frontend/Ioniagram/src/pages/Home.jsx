@@ -13,24 +13,27 @@ import Post from '../components/Post'
 export const Home = () => {
   const [file, setFile] = useState()
   const [caption, setCaption] = useState("")
-  const [posts, setPosts] = useState();
+  const [posts, setPosts] = useState([]);
+  const [userid, setUserid] = useState();
 
   const auth = useAuth();
   const navigate = useNavigate();
 
   //Load posts the user follows 
   useEffect(() => {
-    const userid = JSON.parse(localStorage.getItem("userid"))
+    setUserid(JSON.parse(localStorage.getItem("userid"))) 
 
     const dataRes = async () => await axios.get("http://localhost:8081/Ioniagram/GetPosts" + "/?userid=" +  userid)
     .then((res) => {
+      console.log(userid)
+      console.log(res.data)
 
       setPosts(res.data);
-      console.log(posts);
+      console.log("These are the posts frontend got back: " + posts);
     });
 
     dataRes();
-  }, [])
+  }, [userid])
 
   const handleLogout = () => {
     auth.logout();
@@ -43,7 +46,10 @@ export const Home = () => {
     const formData = new FormData();
     formData.append("image", file)
     formData.append("caption", caption)
-    await axios.post("http://localhost:8081/Ioniagram/Post", formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+
+    console.log(userid)
+    const url = "http://localhost:8081/Ioniagram/Post" + "/?userid=" + userid
+    await axios.post(url, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
 
     navigate("/Ioniagram")
   }
@@ -98,7 +104,7 @@ export const Home = () => {
             <FontAwesomeIcon icon={faMagnifyingGlass} style={{ width: "full", color: "#cdd9ed" }} />
           </div>
 
-          <button onClick={handleLogout} class="mr-1 md:mr-10 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          <button onClick={handleLogout} className="mr-1 md:mr-10 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
             Logout
           </button>
 
@@ -109,10 +115,10 @@ export const Home = () => {
           <div id='postSection' className='flex flex-col bg-gray-600'>
 
             <form onSubmit={submit}>
-              <textarea onChange={e => setCaption(e.target.value)} id="message" rows="4" class="block resize-none p-2.5 w-full h-56 text-xl text-gray-900 bg-gray-50 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Write your thoughts here..."></textarea>
+              <textarea onChange={e => setCaption(e.target.value)} id="message" rows="4" className="block resize-none p-2.5 w-full h-56 text-xl text-gray-900 bg-gray-50 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Write your thoughts here..."></textarea>
               <div id='postOptions' className='flex flex-row p-2 justify-between items-center h-14'>
                 <div id="postOptionsIcons">
-                  <label for="file-upload" class="custom-file-upload">
+                  <label htmlFor="file-upload" className="custom-file-upload">
                     <FontAwesomeIcon icon={faImage} style={{ height: "2rem", width: "2rem", color: "#cdd9ed", marginRight: "10px" }} />
                   </label>
                   <input name='image' className='hidden' id='file-upload' onChange={fileSelected} type="file" accept='image/*' src='' />
@@ -126,7 +132,7 @@ export const Home = () => {
 
 
 
-                <button type='submit' class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                <button type='submit' className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                   POST
                 </button>
               </div>
@@ -136,7 +142,7 @@ export const Home = () => {
 
           {/* Posts from other users */}
           {posts?.map((post) => {
-            return <Post caption={post.caption} imageName={post.imageName} />
+            return <Post caption={post.caption} imageName={post.imageName} imageUrl={post.imageUrl} />
           })}
         </div>
 
