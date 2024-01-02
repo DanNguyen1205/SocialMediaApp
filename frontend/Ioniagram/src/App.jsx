@@ -3,11 +3,12 @@ import { AuthProvider } from './components/auth'
 
 import  { RequireAuth } from './components/requireAuth'
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Link, useParams } from 'react-router-dom'
 
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import Profile from './pages/Profile'
 
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
               <Route path='/Ioniagram/Login' element={ <Login/> }></Route>
               <Route path='/Ioniagram/Signup' element={ <Signup/> }></Route>
               <Route path='/Ioniagram' element={<RequireAuth><Home/></RequireAuth>}></Route>
+              <Route path='/Ioniagram/Profile/:id' element={<RequireAuth><Profile/></RequireAuth>}></Route>
             </Routes>
           </Router>
         </QueryClientProvider>

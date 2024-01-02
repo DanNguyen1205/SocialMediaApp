@@ -146,13 +146,26 @@ app.post('/Ioniagram/Post', upload.single('image'), async (req, res) => {
     })
 })
 
-//Endpoint get posts
+//Endpoint get posts for the logged user
 app.get("/Ioniagram/GetPosts/", async (req, res) => {
     //Get posts for everyone the user follows
     //Inner join posts and relationships and then get all posts where the followerUserId is of the req.param.userid
-    const sqlGetPosts = "SELECT * FROM posts p INNER JOIN relationships r ON (r.followedUserid = p.userid) WHERE r.followerUserid = ?"
+    const sqlGetPosts = "SELECT p.*, fullName, idusers FROM posts p INNER JOIN relationships r ON (r.followedUserid = p.userid) JOIN users u ON (r.followedUserid = u.idusers) WHERE r.followerUserid = ?"
 
-    db.query(sqlGetPosts, [req.query.userid], async (err, data) => {
+    getPosts(sqlGetPosts, [req.query.userid], res)
+})
+
+//Endpoint get posts other user profile
+app.get("/Ioniagram/GetPostsProfile/", async (req, res) => {
+    //Get posts for everyone the user follows
+    //Inner join posts and relationships and then get all posts where the followerUserId is of the req.param.userid
+    const sqlGetPosts = "SELECT p.*, fullName FROM posts p INNER JOIN users u ON (p.userid = u.idusers) WHERE userid=(?)"
+
+    getPosts(sqlGetPosts, [req.query.userid], res)
+})
+
+function getPosts(sqlStatement, id, res){
+    db.query(sqlStatement, id, async (err, data) => {
         if (err) {
             console.log("Get posts error: " + err)
             return res.json(err)
@@ -175,7 +188,7 @@ app.get("/Ioniagram/GetPosts/", async (req, res) => {
 
             res.json(posts);
             console.log("--------------------------------------------");
-            console.log(data);
+            console.log(posts);
         }
         else {
             //User does not follow anyone
@@ -183,10 +196,7 @@ app.get("/Ioniagram/GetPosts/", async (req, res) => {
         }
 
     })
-
-
-
-})
+}
 
 
 

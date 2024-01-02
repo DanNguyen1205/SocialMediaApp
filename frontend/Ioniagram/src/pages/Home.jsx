@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faImage, faFaceSmile, faMagnifyingGlass, faHouse } from '@fortawesome/free-solid-svg-icons'
+import { faImage, faUser, faMessage, faBookmark, faMagnifyingGlass, faHouse } from '@fortawesome/free-solid-svg-icons'
 import IoniaIcon from "../images/Ionia_Crest_icon.webp"
 import "../main.css"
 import { useAuth } from '../components/auth'
@@ -8,7 +8,9 @@ import { useNavigate } from 'react-router-dom'
 import axios, { Axios } from 'axios'
 import { useQuery } from '@tanstack/react-query';
 
-import Post from '../components/Post'
+import Post from '../components/Post';
+import LeftSidebarOptions from '../components/leftSidebarOptions';
+
 
 export const Home = () => {
   const [file, setFile] = useState()
@@ -21,24 +23,22 @@ export const Home = () => {
 
   //Load posts the user follows 
   useEffect(() => {
-    setUserid(JSON.parse(localStorage.getItem("userid"))) 
-
     const dataRes = async () => await axios.get("http://localhost:8081/Ioniagram/GetPosts" + "/?userid=" +  userid)
     .then((res) => {
-      console.log(userid)
+      setUserid(JSON.parse(localStorage.getItem("userid"))) 
+      console.log("These are the posts frontend got back: ");
       console.log(res.data)
 
       setPosts(res.data);
-      console.log("These are the posts frontend got back: " + posts);
     });
 
     dataRes();
   }, [userid])
 
-  const handleLogout = () => {
-    auth.logout();
-    navigate("/Ioniagram/Login")
-  }
+  // const handleLogout = () => {
+  //   auth.logout();
+  //   navigate("/Ioniagram/Login")
+  // }
 
   const submit = async event => {
     event.preventDefault()
@@ -82,36 +82,10 @@ export const Home = () => {
       {/* TODO1:On md: media query make the icons bigger */}
       {/* TODO2:Move elements into their own components  */}
       <div id='container' className='grid grid-cols-4 h-screen h-full bg-gray-200'>
-        <div className='flex flex-col gap-3 items-end bg-gray-900'>
-
-          <div className='mr-10 mt-5 hover:bg-gray-800' style={{ borderRadius: "50%", width: "50px", height: "50px" }}>
-            <img src={IoniaIcon} className='' alt="" />
-          </div>
-
-          <div className='mr-10 flex justify-center items-center hover:bg-gray-800' style={{ borderRadius: "50%", width: "40px", height: "40px" }}>
-            <FontAwesomeIcon icon={faMagnifyingGlass} style={{ width: "full", color: "#cdd9ed" }} />
-          </div>
-
-          <div style={{ borderRadius: "50%", width: "40px", height: "40px" }} className='md:w-1/2 mr-10 flex justify-center items-center hover:bg-gray-800'>
-            <FontAwesomeIcon icon={faMagnifyingGlass} style={{ width: "full", color: "#cdd9ed" }} />
-          </div>
-
-          <div className='mr-10 flex justify-center items-center hover:bg-gray-800' style={{ borderRadius: "50%", width: "40px", height: "40px" }}>
-            <FontAwesomeIcon icon={faMagnifyingGlass} style={{ width: "full", color: "#cdd9ed" }} />
-          </div>
-
-          <div className='mr-10 flex justify-center items-center hover:bg-gray-800' style={{ borderRadius: "50%", width: "40px", height: "40px" }}>
-            <FontAwesomeIcon icon={faMagnifyingGlass} style={{ width: "full", color: "#cdd9ed" }} />
-          </div>
-
-          <button onClick={handleLogout} className="mr-1 md:mr-10 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            Logout
-          </button>
-
-        </div>
+        <LeftSidebarOptions/>
 
         {/* Middle section of page. Contains create new post and posts from other users */}
-        <div className='col-span-3 md:col-span-2 bg-blue-500'>
+        <div className='col-span-3 md:col-span-2 bg-gray-600'>
           <div id='postSection' className='flex flex-col bg-gray-600'>
 
             <form onSubmit={submit}>
@@ -132,7 +106,7 @@ export const Home = () => {
 
 
 
-                <button type='submit' className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                <button type='submit' className="bg-[#cdd9ed] hover:bg-[#a1b0c9] text-[#4B5563] font-bold py-2 px-4 rounded">
                   POST
                 </button>
               </div>
@@ -142,7 +116,7 @@ export const Home = () => {
 
           {/* Posts from other users */}
           {posts?.map((post) => {
-            return <Post caption={post.caption} imageName={post.imageName} imageUrl={post.imageUrl} />
+            return <Post caption={post.caption} imageName={post.imageName} imageUrl={post.imageUrl} fullName={post.fullName} userid={post.idusers}/>
           })}
         </div>
 
