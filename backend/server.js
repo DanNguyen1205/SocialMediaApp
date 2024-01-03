@@ -164,7 +164,7 @@ app.get("/Ioniagram/GetPostsProfile/", async (req, res) => {
     getPosts(sqlGetPosts, [req.query.userid], res)
 })
 
-function getPosts(sqlStatement, id, res){
+async function getPosts(sqlStatement, id, res){
     db.query(sqlStatement, id, async (err, data) => {
         if (err) {
             console.log("Get posts error: " + err)
@@ -186,9 +186,9 @@ function getPosts(sqlStatement, id, res){
                 post.imageUrl = url;
             }
 
-            res.json(posts);
             console.log("--------------------------------------------");
             console.log(posts);
+            return res.json(posts);
         }
         else {
             //User does not follow anyone

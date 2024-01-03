@@ -7,6 +7,7 @@ import { useAuth } from '../components/auth'
 import { useNavigate } from 'react-router-dom'
 import axios, { Axios } from 'axios'
 import { useQuery } from '@tanstack/react-query';
+import { createPost, getPosts } from '../api/posts'
 
 import Post from '../components/Post';
 import LeftSidebarOptions from '../components/leftSidebarOptions';
@@ -16,29 +17,20 @@ export const Home = () => {
   const [file, setFile] = useState()
   const [caption, setCaption] = useState("")
   const [posts, setPosts] = useState([]);
-  const [userid, setUserid] = useState();
+  const [userid, setUserid] = useState(JSON.parse(localStorage.getItem("userid")));
 
   const auth = useAuth();
   const navigate = useNavigate();
 
-  //Load posts the user follows 
-  useEffect(() => {
-    const dataRes = async () => await axios.get("http://localhost:8081/Ioniagram/GetPosts" + "/?userid=" +  userid)
-    .then((res) => {
-      setUserid(JSON.parse(localStorage.getItem("userid"))) 
-      console.log("These are the posts frontend got back: ");
-      console.log(res.data)
+  const getPostQuery = useQuery({
+    queryKey: ["getPostQuery"],
+    queryFn: () => {
+      const data = getPosts()
+      return data;
+    },
+  })
 
-      setPosts(res.data);
-    });
-
-    dataRes();
-  }, [userid])
-
-  // const handleLogout = () => {
-  //   auth.logout();
-  //   navigate("/Ioniagram/Login")
-  // }
+  // //Load posts the user follows 
 
   const submit = async event => {
     event.preventDefault()
@@ -47,9 +39,9 @@ export const Home = () => {
     formData.append("image", file)
     formData.append("caption", caption)
 
-    console.log(userid)
-    const url = "http://localhost:8081/Ioniagram/Post" + "/?userid=" + userid
-    await axios.post(url, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+    // const postMutation = useMutation({
+    //   mutationFn: createPost,
+    // })
 
     navigate("/Ioniagram")
   }
@@ -59,28 +51,12 @@ export const Home = () => {
     setFile(file)
   }
 
-
-  //Load posts that the user follows
-  // const { data: postData, isLoading } = useQuery({
-  //   queryKey: ["queryPost"],
-  //   queryFn: () => {
-  //     const userid = JSON.parse(localStorage.getItem("userid"))
-  //     axios.get("http://localhost:8081/Ioniagram/GetPosts" + "/?userid=" + userid)
-  //       .then((res) => {
-  //         console.log("RESPONSE FROM ENDPOINT: " + res.data)
-  //         setPosts(data);
-
-  //         console.log("THE POSTS: " + posts);
-  //       });
-
-  //   }
-  // })
+  if(getPostQuery.isLoading){
+    return <div>isLoading</div>
+  }
 
   return (
     <>
-      {/* First section of page. Contains icons such as home and search options. */}
-      {/* TODO1:On md: media query make the icons bigger */}
-      {/* TODO2:Move elements into their own components  */}
       <div id='container' className='grid grid-cols-4 h-screen h-full bg-gray-200'>
         <LeftSidebarOptions/>
 
@@ -96,15 +72,7 @@ export const Home = () => {
                     <FontAwesomeIcon icon={faImage} style={{ height: "2rem", width: "2rem", color: "#cdd9ed", marginRight: "10px" }} />
                   </label>
                   <input name='image' className='hidden' id='file-upload' onChange={fileSelected} type="file" accept='image/*' src='' />
-                  {/* <button onChange={fileSelected} type='file' ac>
-                  <FontAwesomeIcon icon={faImage} style={{ height: "2rem", width: "2rem", color: "#cdd9ed", marginRight:"10px"}} />
-                  </button> */}
-                  {/* <button>
-                  <FontAwesomeIcon icon={faFaceSmile} style={{height: "2rem", width: "2rem", color: "#cdd9ed",}} />              
-                  </button> */}
                 </div>
-
-
 
                 <button type='submit' className="bg-[#cdd9ed] hover:bg-[#a1b0c9] text-[#4B5563] font-bold py-2 px-4 rounded">
                   POST
@@ -115,7 +83,7 @@ export const Home = () => {
           </div>
 
           {/* Posts from other users */}
-          {posts?.map((post) => {
+          {getPostQuery.data?.map((post) => {
             return <Post caption={post.caption} imageName={post.imageName} imageUrl={post.imageUrl} fullName={post.fullName} userid={post.idusers}/>
           })}
         </div>

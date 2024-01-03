@@ -3,10 +3,12 @@ import IoniaIcon from "../images/Ionia_Crest_icon.webp"
 import { faImage, faUser, faMessage, faBookmark, faMagnifyingGlass, faHouse } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../components/auth'
 
 
 export const leftSidebarOptions = () => {
     const navigate = useNavigate();
+    const auth = useAuth();
 
     const handleLogout = () => {
         auth.logout();
