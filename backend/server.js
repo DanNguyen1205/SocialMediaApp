@@ -142,7 +142,9 @@ app.post('/Ioniagram/Post', upload.single('image'), async (req, res) => {
             console.log("Post error" + err)
             return res.json(err)
         }
+        console.log("Inserted post succesfully")
         return res.json(data);
+
     })
 })
 
@@ -150,9 +152,9 @@ app.post('/Ioniagram/Post', upload.single('image'), async (req, res) => {
 app.get("/Ioniagram/GetPosts/", async (req, res) => {
     //Get posts for everyone the user follows
     //Inner join posts and relationships and then get all posts where the followerUserId is of the req.param.userid
-    const sqlGetPosts = "SELECT p.*, fullName, idusers FROM posts p INNER JOIN relationships r ON (r.followedUserid = p.userid) JOIN users u ON (r.followedUserid = u.idusers) WHERE r.followerUserid = ?"
-
-    getPosts(sqlGetPosts, [req.query.userid], res)
+    const sqlGetPosts = "SELECT p.*, fullName, idusers FROM posts p INNER JOIN relationships r ON (r.followedUserid = p.userid OR p.userid = (?)) INNER JOIN users u ON (r.followedUserid = u.idusers) WHERE r.followerUserid = ? OR p.userid = ?"
+    const sqlGetPosts2 = "SELECT p.*, fullName, idusers FROM posts p INNER JOIN users u ON (p.userid = u.idusers) INNER JOIN relationships r ON (r.followeduserid = u.idusers OR p.userid = (?)) WHERE followerUserid = (?) OR p.userid = (?)"
+    getPosts(sqlGetPosts2, [req.query.userid, req.query.userid, req.query.userid], res)
 })
 
 //Endpoint get posts other user profile
@@ -164,13 +166,14 @@ app.get("/Ioniagram/GetPostsProfile/", async (req, res) => {
     getPosts(sqlGetPosts, [req.query.userid], res)
 })
 
-async function getPosts(sqlStatement, id, res){
+async function getPosts(sqlStatement, id, res) {
     db.query(sqlStatement, id, async (err, data) => {
         if (err) {
             console.log("Get posts error: " + err)
             return res.json(err)
         } else if (data.length > 0) {
-            const posts = data 
+            const posts = data
+            console.log("USERID:" + id)
 
             //Retrieve images from S3 bucket. 
             //Make a signed url for every image that the user can access. 
@@ -179,7 +182,7 @@ async function getPosts(sqlStatement, id, res){
                     Bucket: bucketName,
                     Key: post.imageName
                 }
-    
+
                 //s3 setup to retrieve image signed url
                 const command = new GetObjectCommand(getObjectParams)
                 const url = await getSignedUrl(s3, command, { expiresIn: 3600 })
@@ -192,11 +195,59 @@ async function getPosts(sqlStatement, id, res){
         }
         else {
             //User does not follow anyone
+            console.log("WHAT");
             return res.json(data);
         }
 
     })
 }
+
+//Endpoint get posts other user profile
+app.get("/Ioniagram/GetComments/", async (req, res) => {
+    //Get posts for everyone the user follows
+    //Inner join posts and relationships and then get all posts where the followerUserId is of the req.param.userid
+    console.log(req.query.postid)
+
+    const sqlGetComments = "SELECT c.*, fullName FROM comments c INNER JOIN users u ON (c.commenterid = u.idusers) WHERE c.postid=(?)"
+
+    db.query(sqlGetComments, req.query.postid, async (err, data) => {
+        if(err){
+            console.log("Get comments error: " + err)
+            return res.json(err)
+        }else if(data.length > 0){
+            console.log("TEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEST")
+            console.log(data)
+
+            return res.json(data)
+        }else{
+            console.log("No comments on this post")
+        }
+
+    })
+})
+
+//End point post comment 
+app.post('/Ioniagram/Comment/', async (req, res) => {
+    // SQL statements
+    const sqlComment = "INSERT INTO comments (`comment`, `commenterid`, `postid`) VALUES (?)";
+    //Values from the post request
+
+    console.log(req.body)
+    const values = [
+        req.body.comment,
+        req.body.commenterid,
+        req.body.postid
+    ]
+
+    db.query(sqlComment, [values], (err, data) => {
+        if (err) {
+            console.log("Comment inser into DB error" + err)
+            return res.json(err)
+        }
+        console.log("Inserted commented succesfully")
+        return res.json(data)
+    })
+})
 
 
 

@@ -23,3 +23,26 @@
     background: aqua;
     border: 30px solid blue;
 }
+
+#commentContainer {
+    position:relative;
+}
+
+#textAreaButton {
+    position:absolute;
+    bottom: 3px;
+    right:3px;
+}
+
+#commentTextArea {
+    position:relative;
+    border:none;
+    resize: none;
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+    outline: none; /* add this to stop highlight on focus */
+}
+
+#commentTextArea::-webkit-scrollbar{
+    display: none;  /* Safari and Chrome */
+}
