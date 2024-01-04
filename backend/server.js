@@ -319,6 +319,43 @@ app.get("/Ioniagram/GetFollowers/", async (req, res) => {
     })
 })
 
+app.post('/Ioniagram/Follow/', async (req, res) => {
+    const sqlAddRelationship = "INSERT INTO relationships (`followerUserid`, `followedUserid`) VALUES (?)";
+
+    console.log(req.body)
+
+    const values = [
+        req.body.followerUserid,
+        req.body.followedUserid
+    ]
+
+    db.query(sqlAddRelationship, [values], (err, data) => {
+        if (err) {
+            console.log("Relationship insert into DB error" + err)
+            return res.json(err)
+        }
+        console.log("Relationship added succesfully")
+        return res.json(data)
+    })
+})
+
+
+
+app.delete('/Ioniagram/Unfollow/', async (req,res) =>{
+    const sqlDeleteRelationship = "DELETE FROM relationships WHERE `followerUserid`=(?) AND `followedUserid`=(?)"
+
+    console.log(req.body)
+
+    db.query(sqlDeleteRelationship, [req.body.followerUserid, req.body.followedUserid], (err, data) => {
+        if (err) {
+            console.log("Relationship deleted from DB error" + err)
+            return res.json(err)
+        }
+        console.log("Relationship successfully deleted")
+        return res.json(data)
+    })
+})
+
 
 
 //Backend listening on port 8081. 

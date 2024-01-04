@@ -68,7 +68,7 @@ export function deleteLike({ userid, postid }) {
   })
 }
 
-//RELATIONSHIPS
+//FOLLOW
 export function getFollowers(profileid) {
   const url = "http://localhost:8081/Ioniagram/GetFollowers/" + "?userid=" + profileid
   return axios.get(url)
@@ -76,4 +76,23 @@ export function getFollowers(profileid) {
       res.data
     )
 }
+
+export function follow({ followerUserid, followedUserid }) {
+  const url = "http://localhost:8081/Ioniagram/Follow/"
+  return axios.post(url, {
+    followerUserid: followerUserid,
+    followedUserid, followedUserid
+  })
+}
+
+export function unfollow({ followerUserid, followedUserid }) {
+  const url = "http://localhost:8081/Ioniagram/Unfollow/"
+  return axios.delete(url, {
+    data: {
+      followerUserid: followerUserid,
+      followedUserid, followedUserid
+    }
+  })
+}
+
 

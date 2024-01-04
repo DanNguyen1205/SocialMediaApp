@@ -7,7 +7,7 @@ import Post from '../components/Post';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser } from '@fortawesome/free-solid-svg-icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getPostsProfile, getFollowers } from '../api/posts'
+import { getPostsProfile, getFollowers, follow, unfollow } from '../api/posts'
 
 
 
@@ -46,13 +46,34 @@ export const Profile = () => {
 
     function followHandler() {
         if (!followBoolean) {
+            followMutation.mutate({
+                followerUserid: localStorage.getItem("userid"),
+                followedUserid: id
+            })
 
         } else {
-
+            unfollowMutation.mutate({
+                followerUserid: localStorage.getItem("userid"),
+                followedUserid: id
+            })
         }
 
         setFollowBoolean(!followBoolean)
     }
+
+    const followMutation = useMutation({
+        mutationFn: follow,
+        onSuccess: data => {
+          queryClient.invalidateQueries(["getFollowerQuery", id], {exact:true})
+        }
+      })
+    
+      const unfollowMutation = useMutation({
+        mutationFn: unfollow,
+        onSuccess: data => {
+          queryClient.invalidateQueries(["getFollowerQuery", id], {exact:true})
+        }
+      })
 
     return (
         <>
