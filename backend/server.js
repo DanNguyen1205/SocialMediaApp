@@ -47,7 +47,7 @@ const db = mysql.createConnection({
     database: process.env.database
 })
 
-//Endpoint signup
+//ENDPOINT LOG SIGNUP
 app.post('/Ioniagram/Signup', (req, res) => {
 
     // SQL statements
@@ -87,7 +87,6 @@ app.post('/Ioniagram/Signup', (req, res) => {
     })
 })
 
-//Endpoint login
 app.post('/Ioniagram/Login', (req, res) => {
     const sqlGetLogin = "SELECT * FROM users WHERE `email` = ? AND `password` = ?";
 
@@ -107,7 +106,7 @@ app.post('/Ioniagram/Login', (req, res) => {
     })
 })
 
-//Endpoint post
+//ENDPOINT POST
 app.post('/Ioniagram/Post', upload.single('image'), async (req, res) => {
     console.log("req.body", req.body)
     console.log("req.body", req.file)
@@ -148,32 +147,27 @@ app.post('/Ioniagram/Post', upload.single('image'), async (req, res) => {
     })
 })
 
-//Endpoint get posts for the logged user
 app.get("/Ioniagram/GetPosts/", async (req, res) => {
     //Get posts for everyone the user follows
     //Inner join posts and relationships and then get all posts where the followerUserId is of the req.param.userid
-    const sqlGetPosts = "SELECT p.*, fullName, idusers FROM posts p INNER JOIN relationships r ON (r.followedUserid = p.userid OR p.userid = (?)) INNER JOIN users u ON (r.followedUserid = u.idusers) WHERE r.followerUserid = ? OR p.userid = ?"
-    const sqlGetPosts2 = "SELECT p.*, fullName, idusers FROM posts p INNER JOIN users u ON (p.userid = u.idusers) INNER JOIN relationships r ON (r.followeduserid = u.idusers OR p.userid = (?)) WHERE followerUserid = (?) OR p.userid = (?)"
-    getPosts(sqlGetPosts2, [req.query.userid, req.query.userid, req.query.userid], res)
+    const sqlGetPosts = "SELECT p.*, fullName, idusers FROM posts p INNER JOIN users u ON (p.userid = u.idusers) INNER JOIN relationships r ON (r.followeduserid = u.idusers OR p.userid = (?)) WHERE followerUserid = (?) OR p.userid = (?)"
+    getPosts(sqlGetPosts, [req.query.userid, req.query.userid, req.query.userid], res)
 })
 
-//Endpoint get posts other user profile
 app.get("/Ioniagram/GetPostsProfile/", async (req, res) => {
-    //Get posts for everyone the user follows
-    //Inner join posts and relationships and then get all posts where the followerUserId is of the req.param.userid
     const sqlGetPosts = "SELECT p.*, fullName FROM posts p INNER JOIN users u ON (p.userid = u.idusers) WHERE userid=(?)"
 
     getPosts(sqlGetPosts, [req.query.userid], res)
 })
 
 async function getPosts(sqlStatement, id, res) {
+
     db.query(sqlStatement, id, async (err, data) => {
         if (err) {
             console.log("Get posts error: " + err)
             return res.json(err)
         } else if (data.length > 0) {
             const posts = data
-            console.log("USERID:" + id)
 
             //Retrieve images from S3 bucket. 
             //Make a signed url for every image that the user can access. 
@@ -189,25 +183,23 @@ async function getPosts(sqlStatement, id, res) {
                 post.imageUrl = url;
             }
 
-            console.log("--------------------------------------------");
             console.log(posts);
+            console.log("--------------------------------------------");
+
             return res.json(posts);
         }
         else {
             //User does not follow anyone
-            console.log("WHAT");
+            console.log("User does not follow anyone");
             return res.json(data);
         }
 
     })
 }
 
-//Endpoint get posts other user profile
+//ENDPOINT COMMENTS
 app.get("/Ioniagram/GetComments/", async (req, res) => {
     //Get posts for everyone the user follows
-    //Inner join posts and relationships and then get all posts where the followerUserId is of the req.param.userid
-    console.log(req.query.postid)
-
     const sqlGetComments = "SELECT c.*, fullName FROM comments c INNER JOIN users u ON (c.commenterid = u.idusers) WHERE c.postid=(?)"
 
     db.query(sqlGetComments, req.query.postid, async (err, data) => {
@@ -215,22 +207,21 @@ app.get("/Ioniagram/GetComments/", async (req, res) => {
             console.log("Get comments error: " + err)
             return res.json(err)
         }else if(data.length > 0){
-            console.log("TEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEST")
+            console.log("COMMENTS FOR, POSTID: " + req.query.postid )
+
             console.log(data)
+            console.log("--------------------------------------------");
 
             return res.json(data)
         }else{
-            console.log("No comments on this post")
+            // console.log("No comments on this post, postid:" + req.query.postid)
         }
 
     })
 })
 
-//End point post comment 
 app.post('/Ioniagram/Comment/', async (req, res) => {
-    // SQL statements
     const sqlComment = "INSERT INTO comments (`comment`, `commenterid`, `postid`) VALUES (?)";
-    //Values from the post request
 
     console.log(req.body)
     const values = [
@@ -241,11 +232,90 @@ app.post('/Ioniagram/Comment/', async (req, res) => {
 
     db.query(sqlComment, [values], (err, data) => {
         if (err) {
-            console.log("Comment inser into DB error" + err)
+            console.log("Comment insert into DB error" + err)
             return res.json(err)
         }
         console.log("Inserted commented succesfully")
         return res.json(data)
+    })
+})
+
+//ENDPOINT LIKES
+app.get("/Ioniagram/GetLikes/", async (req, res) => {
+    const sqlGetComments = "SELECT * FROM likes WHERE `postid` = (?)"
+
+    db.query(sqlGetComments, req.query.postid, async (err, data) => {
+        if(err){
+            console.log("Get likes error: " + err)
+            return res.json(err)
+        }else if(data.length > 0){
+            console.log("LIKES FOR, POSTID:" + req.query.postid)
+            console.log(data)
+
+            return res.json(data)
+        }else{
+            return res.json([])
+        }
+
+    })
+})
+
+app.post('/Ioniagram/Like/', async (req, res) => {
+    const sqlComment = "INSERT INTO likes (`userid`, `postid`) VALUES (?)";
+
+    console.log(req.body)
+
+    const values = [
+        req.body.userid,
+        req.body.postid
+    ]
+
+    db.query(sqlComment, [values], (err, data) => {
+        if (err) {
+            console.log("Like insert into DB error" + err)
+            return res.json(err)
+        }
+        console.log("Inserted like succesfully")
+        return res.json(data)
+    })
+})
+
+
+
+app.delete('/Ioniagram/DeleteLike/', async (req,res) =>{
+    const sqlDeleteLike = "DELETE FROM likes WHERE `userid`=(?) AND `postid`=(?)"
+
+    console.log(req.body)
+
+    db.query(sqlDeleteLike, [req.body.userid, req.body.postid], (err, data) => {
+        if (err) {
+            console.log("Like deleted from DB error" + err)
+            return res.json(err)
+        }
+        console.log("Like successfully deleted")
+        return res.json(data)
+    })
+})
+
+//FOLLOWERS
+app.get("/Ioniagram/GetFollowers/", async (req, res) => {
+    const sqlGetFollowers = "SELECT * FROM relationships WHERE `followedUserid` = (?)"
+
+    db.query(sqlGetFollowers, req.query.userid, async (err, data) => {
+        if(err){
+            console.log("Get followers error: " + err)
+            return res.json(err)
+        }else if(data.length > 0){
+            console.log("FOLLOWERS:")
+            console.log(data)
+            console.log("--------------------------------------------");
+
+            return res.json(data)
+
+        }else{
+            return res.json([])
+        }
+
     })
 })
 

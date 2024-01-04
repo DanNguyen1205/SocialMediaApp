@@ -37,6 +37,7 @@ export const Login = () => {
 
       console.log("Saving user ID: " + res.data[0].idusers);
       localStorage.setItem("userid", JSON.stringify(res.data[0].idusers))
+      localStorage.setItem("fullName", JSON.stringify(res.data[0].fullName))
 
       navigate("/Ioniagram", {replace:true})
     })

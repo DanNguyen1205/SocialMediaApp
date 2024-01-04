@@ -6,6 +6,8 @@ import axios, { Axios } from 'axios'
 import Post from '../components/Post';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser } from '@fortawesome/free-solid-svg-icons'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getPostsProfile, getFollowers } from '../api/posts'
 
 
 
@@ -13,23 +15,44 @@ export const Profile = () => {
     const { id } = useParams();
     const [profilePicture, setProfilePicture] = useState();
     const [posts, setPosts] = useState([]);
+    const [postCount, setPostCount] = useState(0)
+    const [followerCount, setFollowerCount] = useState(0)
+    const [followBoolean, setFollowBoolean] = useState(false)
 
+    const getPostsProfileQuery = useQuery({
+        queryKey: ["getPostsProfileQuery", id],
+        queryFn: async () => {
+            const data = await getPostsProfile(id)
+            setPostCount(data.length)
+            setPosts(data)
+            return data;
+        },
+    })
 
+    const getFollowerQuery = useQuery({
+        queryKey: ["getFollowerQuery", id],
+        queryFn: async () => {
+            console.log(id)
+            const data = await getFollowers(id)
+            setFollowerCount(data.length)
 
-    // Get all posts that the user has posted.
-    useEffect(() => {
-        const dataRes = async () => await axios.get("http://localhost:8081/Ioniagram/GetPostsProfile" + "/?userid=" + id)
-            .then((res) => {
-                console.log("User id gotten from params: " + id)
-                console.log(res.data)
+            if (data.some((e) => e.followerUserid == localStorage.getItem("userid"))) {
+                setFollowBoolean(true);
+            }
 
-                setPosts(res.data);
-                console.log("These are the posts frontend got back: " + posts);
-            });
+            return data;
+        },
+    })
 
-        dataRes();
-    }, [])
+    function followHandler() {
+        if (!followBoolean) {
 
+        } else {
+
+        }
+
+        setFollowBoolean(!followBoolean)
+    }
 
     return (
         <>
@@ -50,19 +73,20 @@ export const Profile = () => {
                                     </div>
                                     <h1 className='ml-2'>{posts[0]?.fullName}</h1>
                                 </section>
-                                <p>Follower count: </p>
-                                <p>Post count: </p>
+                                <p>Follower count: {followerCount}</p>
+                                <p>Post count: {postCount}</p>
                             </div>
 
-
-                            <button onClick={() => { }} className="bg-[#cdd9ed] hover:bg-[#a1b0c9] text-[#4B5563] font-bold py-2 px-4 rounded">
-                                Follow
-                            </button>
+                            {id != localStorage.getItem("userid") &&
+                                <button id='followButton' onClick={followHandler} style={{ backgroundColor: followBoolean ? "#cdd9ed" : "#616c80", color: !followBoolean && "white" }} className="hover:bg-[#a1b0c9] text-[#4B5563] font-bold py-2 px-4 rounded min-w-30">
+                                    {followBoolean ? "Unfollow" : "Follow"}
+                                </button>
+                            }
                         </div>
                     </div>
                     {/* Posts from other users */}
-                    {posts?.map((post) => {
-                        return <Post caption={post.caption} imageName={post.imageName} imageUrl={post.imageUrl} fullName={post.fullName} userid={id} />
+                    {getPostsProfileQuery.data?.map((post) => {
+                        return <Post caption={post.caption} imageName={post.imageName} imageUrl={post.imageUrl} fullName={post.fullName} userid={id} postid={post.idposts} />
                     })}
                 </div>
 

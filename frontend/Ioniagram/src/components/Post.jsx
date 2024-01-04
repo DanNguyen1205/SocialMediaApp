@@ -3,6 +3,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHeart, faComment, faUser } from '@fortawesome/free-solid-svg-icons'
 import { useNavigate, Link } from 'react-router-dom'
 import CommentSection from './CommentSection'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getLikes, addLike, deleteLike } from '../api/posts'
 
 
 export const Post = ({ caption, imageName, imageUrl, fullName, profilePicture, userid, postid }) => {
@@ -11,10 +13,55 @@ export const Post = ({ caption, imageName, imageUrl, fullName, profilePicture, u
   const [numberOfLikes, setNumberOfLikes] = useState(0);
   const [numberOfComments, setNumberOfComments] = useState(0);
 
-
   const navigate = useNavigate();
+  const queryClient = useQueryClient()
+
+
+  const getLikesQuery = useQuery({
+    queryKey: ["getLikesQuery", postid],
+    queryFn: async () => {
+      const data = await getLikes(postid)
+      setNumberOfLikes(data.length)
+
+      // if(data != []){
+      //   setNumberOfLikes(data.length)
+      // }
+
+      if(data.some((e) => e.userid == localStorage.getItem("userid"))){
+        setLike(true);
+      }
+    
+      return data;
+    },
+  })
+
+  const addLikeMutation = useMutation({
+    mutationFn: addLike,
+    onSuccess: data => {
+      queryClient.invalidateQueries(["getLikesQuery", postid], {exact:true})
+    }
+  })
+
+  const deleteLikeMutation = useMutation({
+    mutationFn: deleteLike,
+    onSuccess: data => {
+      queryClient.invalidateQueries(["getLikesQuery", postid], {exact:true})
+    }
+  })
 
   function likeHandler() {
+    if(!like){
+      addLikeMutation.mutate({
+        userid: localStorage.getItem("userid"),
+        postid: postid
+      })
+    }else {
+      deleteLikeMutation.mutate({
+        userid: localStorage.getItem("userid"),
+        postid: postid
+      })
+    }
+
     setLike(!like)
   }
 

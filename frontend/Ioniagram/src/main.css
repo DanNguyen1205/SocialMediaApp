@@ -46,3 +46,8 @@
 #commentTextArea::-webkit-scrollbar{
     display: none;  /* Safari and Chrome */
 }
+
+#followButton:hover {
+    background: #a1b0c9 !important;
+}
+

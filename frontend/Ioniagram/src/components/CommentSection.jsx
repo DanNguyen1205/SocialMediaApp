@@ -10,8 +10,8 @@ const CommentSection = ({ commentsShow, postid, setNumberOfComments }) => {
 
     const queryClient = useQueryClient()
 
-    const { isLoading, isError, data, error } = useQuery({
-        queryKey: ["getCommentsQuery"],
+    const getCommentsQuery = useQuery({
+        queryKey: ["getCommentsQuery", postid],
         queryFn: async () => {
           const data = await getComments(postid)
           setNumberOfComments(data.length);
@@ -22,7 +22,16 @@ const CommentSection = ({ commentsShow, postid, setNumberOfComments }) => {
     const postComment = useMutation({
         mutationFn: createComment,
         onSuccess: data => {
-            queryClient.invalidateQueries(["getCommentsQuery"], { exact: true })
+            console.log(data)
+            queryClient.invalidateQueries(["getCommentsQuery", postid], { exact: true })
+
+            //I couldnt get mutate to work if the entries were empty from the begninning so this is bandaid solution. 
+            if(getCommentsQuery.data == undefined){
+                queryClient.setQueryData(["getCommentsQuery", postid], [{comment: comment, fullName: JSON.parse(localStorage.getItem("fullName"))}])
+                setNumberOfComments(1)
+                console.log(getCommentsQuery.data)
+
+            }
         }
     })
 
@@ -53,7 +62,7 @@ const CommentSection = ({ commentsShow, postid, setNumberOfComments }) => {
                 </div>
 
                 <div className='text-wrap flex flex-col min-h-20 bg-gray-800 text-white p-2'>
-                    {data?.map((e) => {
+                    {getCommentsQuery.data?.map((e) => {
                         return <Comment comment={e.comment} fullName={e.fullName} />
                     })}
                 </div>
