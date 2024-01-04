@@ -151,7 +151,8 @@ app.get("/Ioniagram/GetPosts/", async (req, res) => {
     //Get posts for everyone the user follows
     //Inner join posts and relationships and then get all posts where the followerUserId is of the req.param.userid
     const sqlGetPosts = "SELECT p.*, fullName, idusers FROM posts p INNER JOIN users u ON (p.userid = u.idusers) INNER JOIN relationships r ON (r.followeduserid = u.idusers OR p.userid = (?)) WHERE followerUserid = (?) OR p.userid = (?)"
-    getPosts(sqlGetPosts, [req.query.userid, req.query.userid, req.query.userid], res)
+    const sqlGetPosts2 = "SELECT p.*, fullName, idusers FROM posts p JOIN users u ON (u.idusers = p.userid) LEFT JOIN relationships r ON (p.userid = r.followedUserid) WHERE r.followerUserid = (?) or p.userid = (?)"
+    getPosts(sqlGetPosts2, [req.query.userid, req.query.userid], res)
 })
 
 app.get("/Ioniagram/GetPostsProfile/", async (req, res) => {
