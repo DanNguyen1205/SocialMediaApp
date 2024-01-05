@@ -166,7 +166,6 @@ export const Profile = () => {
 
                 {/* Third section */}
                 <div className='hidden md:block bg-gray-900 text-white'>
-                    Filler page for added functionality
                 </div>
             </div>
         </>

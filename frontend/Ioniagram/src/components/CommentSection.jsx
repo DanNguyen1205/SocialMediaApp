@@ -7,6 +7,7 @@ import { createComment, getComments } from '../api/posts'
 const CommentSection = ({ commentsShow, postid, setNumberOfComments }) => {
     const [comment, setComment] = useState("")
     const [commenterid, setCommenterid] = useState(JSON.parse(localStorage.getItem("userid")));
+    const [comments, setComments] = useState([])
 
     const queryClient = useQueryClient()
 
@@ -15,23 +16,22 @@ const CommentSection = ({ commentsShow, postid, setNumberOfComments }) => {
         queryFn: async () => {
           const data = await getComments(postid)
           setNumberOfComments(data.length);
+          setComments(data)
           return data;
         },
+        initialData: [],
       })
 
     const postComment = useMutation({
         mutationFn: createComment,
         onSuccess: data => {
             console.log(data)
-            queryClient.invalidateQueries(["getCommentsQuery", postid], { exact: true })
+            console.log("Comment got id: " + data.data.insertId)
 
-            //I couldnt get mutate to work if the entries were empty from the begninning so this is bandaid solution. 
-            if(getCommentsQuery.data == undefined){
-                queryClient.setQueryData(["getCommentsQuery", postid], [{comment: comment, fullName: JSON.parse(localStorage.getItem("fullName"))}])
-                setNumberOfComments(1)
-                console.log(getCommentsQuery.data)
+            console.log(comments)
 
-            }
+
+            queryClient.invalidateQueries(["getCommentsQuery", postid], { exact: true }, {refetchInactive: true})
         }
     })
 
@@ -62,8 +62,8 @@ const CommentSection = ({ commentsShow, postid, setNumberOfComments }) => {
                 </div>
 
                 <div className='text-wrap flex flex-col min-h-20 bg-gray-800 text-white p-2'>
-                    {getCommentsQuery.data?.map((e) => {
-                        return <Comment comment={e.comment} fullName={e.fullName} />
+                    {getCommentsQuery.data != null && getCommentsQuery.data?.map((e) => {
+                        return <Comment comment={e.comment} fullName={e.fullName} commentid={e.idcomments} commenterid={e.commenterid} postid={postid} comments={comments}/>
                     })}
                 </div>
             </div>

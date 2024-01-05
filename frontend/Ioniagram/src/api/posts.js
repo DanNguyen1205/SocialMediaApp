@@ -37,6 +37,17 @@ export function getExplorePosts() {
     )
 }
 
+export function deletePost({userid, postid}){
+
+  const url = "http://localhost:8081/Ioniagram/DeletePost/"
+  return axios.delete(url, {
+    data: {
+      userid: userid,
+      postid, postid
+    }
+  })
+}
+
 //COMMENTS
 export function getComments(postid) {
   const url = "http://localhost:8081/Ioniagram/GetComments" + "/?postid=" + postid
@@ -49,6 +60,16 @@ export function getComments(postid) {
 export function createComment({ body }) {
   const url = "http://localhost:8081/Ioniagram/Comment/"
   return axios.post(url, body)
+}
+
+export function deleteComment({userid, commentid}){
+  const url = "http://localhost:8081/Ioniagram/DeleteComment/"
+  return axios.delete(url, {
+    data: {
+      userid: userid,
+      commentid, commentid
+    }
+  })
 }
 
 //LIKES

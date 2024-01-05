@@ -31,8 +31,7 @@ export const Explore = () => {
 
         {/* Third section */}
         <div className='hidden md:block bg-gray-900 text-white'>
-          Get explore gets posts randomly so when mutation happens the order of the posts get randomized as well. 
-          Eventual fix when posts are ordered by date of creation. 
+
         </div>
       </div>
     </>

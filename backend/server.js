@@ -253,6 +253,23 @@ async function getPosts(sqlStatement, id, res) {
     })
 }
 
+app.delete('/Ioniagram/DeletePost/', async (req, res) => {
+
+    console.log("TEEESEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEST DB")
+    const sqlDeletePost = "DELETE FROM posts WHERE `userid`=(?) AND `idposts`=(?)"
+
+    console.log(req.body)
+
+    db.query(sqlDeletePost, [req.body.userid, req.body.postid], (err, data) => {
+        if (err) {
+            console.log("Post deleted from DB error" + err)
+            return res.json(err)
+        }
+        console.log("Post successfully deleted")
+        return res.json(data)
+    })
+})
+
 //ENDPOINT COMMENTS
 app.get("/Ioniagram/GetComments/", async (req, res) => {
     //Get posts for everyone the user follows
@@ -292,6 +309,21 @@ app.post('/Ioniagram/Comment/', async (req, res) => {
             return res.json(err)
         }
         console.log("Inserted commented succesfully")
+        return res.json(data)
+    })
+})
+
+app.delete('/Ioniagram/DeleteComment/', async (req, res) => {
+    const sqlDeleteComment = "DELETE FROM comments WHERE `commenterid`=(?) AND `idcomments`=(?)"
+
+    console.log(req.body)
+
+    db.query(sqlDeleteComment, [req.body.userid, req.body.commentid], (err, data) => {
+        if (err) {
+            console.log("Comment deleted from DB error" + err)
+            return res.json(err)
+        }
+        console.log("Comment successfully deleted")
         return res.json(data)
     })
 })

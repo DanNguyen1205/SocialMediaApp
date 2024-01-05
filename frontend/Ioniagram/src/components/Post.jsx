@@ -4,7 +4,7 @@ import { faHeart, faComment, faUser } from '@fortawesome/free-solid-svg-icons'
 import { useNavigate, Link } from 'react-router-dom'
 import CommentSection from './CommentSection'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getLikes, addLike, deleteLike } from '../api/posts'
+import { getLikes, addLike, deleteLike, deletePost } from '../api/posts'
 
 
 export const Post = ({ caption, imageName, imageUrl, fullName, profilePicture, userid, postid }) => {
@@ -27,10 +27,10 @@ export const Post = ({ caption, imageName, imageUrl, fullName, profilePicture, u
       //   setNumberOfLikes(data.length)
       // }
 
-      if(data.some((e) => e.userid == localStorage.getItem("userid"))){
+      if (data.some((e) => e.userid == localStorage.getItem("userid"))) {
         setLike(true);
       }
-    
+
       return data;
     },
   })
@@ -38,24 +38,32 @@ export const Post = ({ caption, imageName, imageUrl, fullName, profilePicture, u
   const addLikeMutation = useMutation({
     mutationFn: addLike,
     onSuccess: data => {
-      queryClient.invalidateQueries(["getLikesQuery", postid], {exact:true})
+      queryClient.invalidateQueries(["getLikesQuery", postid], { exact: true })
     }
   })
 
   const deleteLikeMutation = useMutation({
     mutationFn: deleteLike,
     onSuccess: data => {
-      queryClient.invalidateQueries(["getLikesQuery", postid], {exact:true})
+      queryClient.invalidateQueries(["getLikesQuery", postid], { exact: true })
+    }
+  })
+
+  const deletePostMutation = useMutation({
+    mutationFn: deletePost,
+    onSuccess: data => {
+      queryClient.invalidateQueries(["getPostQuery"], { exact: true })
+      queryClient.invalidateQueries(["getPostsProfileQuery"])
     }
   })
 
   function likeHandler() {
-    if(!like){
+    if (!like) {
       addLikeMutation.mutate({
         userid: localStorage.getItem("userid"),
         postid: postid
       })
-    }else {
+    } else {
       deleteLikeMutation.mutate({
         userid: localStorage.getItem("userid"),
         postid: postid
@@ -70,15 +78,22 @@ export const Post = ({ caption, imageName, imageUrl, fullName, profilePicture, u
   }
 
   function profileHandler(userid) {
-
     const url = "/Ioniagram/Profile/" + userid
     navigate(url)
   }
 
+  function deletePostHandler() {
+
+    deletePostMutation.mutate({
+      userid: localStorage.getItem("userid"),
+      postid: postid
+    })
+  }
+
   return (
     <>
-      <div id='postContainer' className='flex flex-auto justify-center items-center'>
-        <div id='post' className='w-full lg:w-3/5 flex flex-col justify-center bg-gray-400 border-x-4 border-t-4 mb-1'>
+      <div id='postsContainer' className='flex flex-auto justify-center items-center'>
+        <div id='post' style={{ position: "relative" }} className='w-full lg:w-3/5 flex flex-col justify-center bg-gray-400 border-x-4 border-t-4 mb-1'>
           <section id='postUser' className='flex flex-row ml-2 mt-2'>
             <div style={{ borderRadius: "50%", width: "50px", height: "50px" }} className='md:w-1/2 flex items-center justify-center bg-gray-600 hover:bg-gray-700'>
               {profilePicture == undefined ? <button onClick={() => profileHandler(userid)} ><FontAwesomeIcon icon={faUser} style={{ width: "full", height: "2rem", width: "2rem", color: "#1a2844" }} /></button> : ""}
@@ -93,6 +108,9 @@ export const Post = ({ caption, imageName, imageUrl, fullName, profilePicture, u
             <h1 className='truncate w-1/2'>{imageName}</h1>
             <p>{caption}</p>
           </section>
+          {userid == localStorage.getItem("userid") &&
+            <button onClick={deletePostHandler} id='postDeleteButton' className='bg-[#c53d46f5] hover:bg-[#fd6161e2] text-[white] font-bold py-1 px-2 mr-1 mt-1 rounded'>Delete post</button>
+          }
           <img className='w-full' src={imageUrl} alt="" />
           <div id='postOptions' className='bg-gray-200 flex flex-row-reverse p-2'>
             <div id="postOptionsIcons" className='flex flex-row'>
@@ -106,7 +124,7 @@ export const Post = ({ caption, imageName, imageUrl, fullName, profilePicture, u
               <div style={{ height: "2rem", width: "2rem", color: "#1a2844" }}>{numberOfComments}</div>
             </div>
           </div>
-          <CommentSection commentsShow={commentsShow} postid={postid} setNumberOfComments={setNumberOfComments}/>
+          <CommentSection commentsShow={commentsShow} postid={postid} setNumberOfComments={setNumberOfComments} />
         </div>
       </div>
 
