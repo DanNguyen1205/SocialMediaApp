@@ -33,13 +33,18 @@ export const Login = () => {
 
     axios.post("http://localhost:8081/Ioniagram/Login", data)
     .then((res) =>{ 
-      auth.login(data)
+      if(res.data != null){
+        auth.login(data)
 
-      console.log("Saving user ID: " + res.data[0].idusers);
-      localStorage.setItem("userid", JSON.stringify(res.data[0].idusers))
-      localStorage.setItem("fullName", JSON.stringify(res.data[0].fullName))
+        console.log("Saving user ID: " + res.data[0].idusers);
+        localStorage.setItem("userid", JSON.stringify(res.data[0].idusers))
+        localStorage.setItem("fullName", JSON.stringify(res.data[0].fullName))
 
-      navigate("/Ioniagram", {replace:true})
+        navigate("/Ioniagram", {replace:true})
+
+      }
+
+
     })
     .catch(err => console.log(err))
   }

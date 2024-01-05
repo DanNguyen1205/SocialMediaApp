@@ -9,6 +9,7 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Profile from './pages/Profile'
+import Explore from './pages/Explore'
 
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
               <Route path='/Ioniagram/Signup' element={ <Signup/> }></Route>
               <Route path='/Ioniagram' element={<RequireAuth><Home/></RequireAuth>}></Route>
               <Route path='/Ioniagram/Profile/:id' element={<RequireAuth><Profile/></RequireAuth>}></Route>
+              <Route path='/Ioniagram/Explore' element={<RequireAuth><Explore/></RequireAuth>}></Route>
             </Routes>
           </Router>
         </QueryClientProvider>

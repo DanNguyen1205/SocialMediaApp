@@ -7,6 +7,7 @@ const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/clien
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 const crypto = require('crypto');
+const bcrypt = require('bcrypt');
 const sharp = require('sharp');
 require('dotenv').config();
 
@@ -53,55 +54,68 @@ app.post('/Ioniagram/Signup', (req, res) => {
     // SQL statements
     const sqlQueryEmail = "SELECT email FROM users WHERE email=(?)"
     const sql = "INSERT INTO users (`fullName`, `age`, `email`, `password`) VALUES (?)";
-    //Values from the post request
-    const values = [
-        req.body.fullName,
-        req.body.age,
-        req.body.email,
-        req.body.password
-    ]
 
-    //Check if email already exist in DB
-    db.query(sqlQueryEmail, [req.body.email], (err, data) => {
-        console.log(process.env.user);
+    const password = req.body.password
+    bcrypt.hash(password, 13, function (err, hash) {
 
-        if (err) {
-            console.log("Signup error 1" + err)
-            return res.json(err)
-        } else {
-            //If it does not exist insert into DB
-            if (data.length == 0) {
-                console.log("Email does not already exist, inserting into DB:")
-                db.query(sql, [values], (err, data) => {
-                    if (err) {
-                        console.log("Signup error 2" + err)
-                        return res.json(err)
-                    }
-                    return res.json(data);
-                })
+        //Values from the post request
+        const values = [
+            req.body.fullName,
+            req.body.age,
+            req.body.email,
+            hash
+        ]
+
+        //Check if email already exist in DB
+        db.query(sqlQueryEmail, [req.body.email], (err, data) => {
+            console.log(process.env.user);
+
+            if (err) {
+                console.log("Signup error 1" + err)
+                return res.json(err)
             } else {
-                console.log("Email already exists.")
-                return res.status(400).send("Email already exists")
+                //If it does not exist insert into DB
+                if (data.length == 0) {
+                    console.log("Email does not already exist, inserting into DB:")
+                    db.query(sql, [values], (err, data) => {
+                        if (err) {
+                            console.log("Signup error 2" + err)
+                            return res.json(err)
+                        }
+                        return res.json(data);
+                    })
+                } else {
+                    console.log("Email already exists.")
+                    return res.status(400).send("Email already exists")
+                }
             }
-        }
+        })
     })
+
 })
 
 app.post('/Ioniagram/Login', (req, res) => {
-    const sqlGetLogin = "SELECT * FROM users WHERE `email` = ? AND `password` = ?";
+    const sqlGetLogin = "SELECT * FROM users WHERE `email` = ?";
 
-    db.query(sqlGetLogin, [req.body.email, req.body.password], (err, data) => {
+    db.query(sqlGetLogin, [req.body.email], (err, data) => {
         if (err) {
             console.log("Login error")
-            return res.json("Error");
+            return res.json(null);
         }
         else if (data.length > 0) {
-            console.log("Login user found")
-            return res.json(data);
+            bcrypt.compare(req.body.password, data[0].password, function(err, result){
+                if(result){
+                    console.log("Login user found")
+                    return res.json(data)
+                }else{
+                    console.log("Wrong password or username")
+                    return res.json(null);
+                }
+            })
+
         } else {
             console.log(data)
-            console.log("data")
-            return res.json("Failed login")
+            return res.json(null)
         }
     })
 })
@@ -161,6 +175,46 @@ app.get("/Ioniagram/GetPostsProfile/", async (req, res) => {
     getPosts(sqlGetPosts, [req.query.userid], res)
 })
 
+app.get("/Ioniagram/ExplorePosts/", async (req, res) => {
+    //Select randomly 100 posts
+    const sqlGetPosts = "SELECT p1.*, fullName FROM posts AS p1 INNER JOIN users u ON (p1.userid = u.idusers) JOIN (SELECT idposts FROM posts ORDER BY RAND() LIMIT 100) as p2 on p1.idposts=p2.idposts"
+
+    db.query(sqlGetPosts, async (err, data) => {
+        if (err) {
+            console.log("Get posts error: " + err)
+            return res.json(err)
+        } else if (data.length > 0) {
+            const posts = data
+            console.log(data)
+
+            //Retrieve images from S3 bucket. 
+            //Make a signed url for every image that the user can access. 
+            for (const post of posts) {
+                const getObjectParams = {
+                    Bucket: bucketName,
+                    Key: post.imageName
+                }
+
+                //s3 setup to retrieve image signed url
+                const command = new GetObjectCommand(getObjectParams)
+                const url = await getSignedUrl(s3, command, { expiresIn: 3600 })
+                post.imageUrl = url;
+            }
+
+            console.log(posts);
+            console.log("--------------------------------------------");
+
+            return res.json(posts);
+        }
+        else {
+            //User does not follow anyone
+            console.log("User does not follow anyone");
+            return res.json(data);
+        }
+
+    })
+})
+
 async function getPosts(sqlStatement, id, res) {
 
     db.query(sqlStatement, id, async (err, data) => {
@@ -169,6 +223,7 @@ async function getPosts(sqlStatement, id, res) {
             return res.json(err)
         } else if (data.length > 0) {
             const posts = data
+            console.log(data)
 
             //Retrieve images from S3 bucket. 
             //Make a signed url for every image that the user can access. 
@@ -204,17 +259,17 @@ app.get("/Ioniagram/GetComments/", async (req, res) => {
     const sqlGetComments = "SELECT c.*, fullName FROM comments c INNER JOIN users u ON (c.commenterid = u.idusers) WHERE c.postid=(?)"
 
     db.query(sqlGetComments, req.query.postid, async (err, data) => {
-        if(err){
+        if (err) {
             console.log("Get comments error: " + err)
             return res.json(err)
-        }else if(data.length > 0){
-            console.log("COMMENTS FOR, POSTID: " + req.query.postid )
+        } else if (data.length > 0) {
+            console.log("COMMENTS FOR, POSTID: " + req.query.postid)
 
             console.log(data)
             console.log("--------------------------------------------");
 
             return res.json(data)
-        }else{
+        } else {
             // console.log("No comments on this post, postid:" + req.query.postid)
         }
 
@@ -246,15 +301,15 @@ app.get("/Ioniagram/GetLikes/", async (req, res) => {
     const sqlGetComments = "SELECT * FROM likes WHERE `postid` = (?)"
 
     db.query(sqlGetComments, req.query.postid, async (err, data) => {
-        if(err){
+        if (err) {
             console.log("Get likes error: " + err)
             return res.json(err)
-        }else if(data.length > 0){
+        } else if (data.length > 0) {
             console.log("LIKES FOR, POSTID:" + req.query.postid)
             console.log(data)
 
             return res.json(data)
-        }else{
+        } else {
             return res.json([])
         }
 
@@ -283,7 +338,7 @@ app.post('/Ioniagram/Like/', async (req, res) => {
 
 
 
-app.delete('/Ioniagram/DeleteLike/', async (req,res) =>{
+app.delete('/Ioniagram/DeleteLike/', async (req, res) => {
     const sqlDeleteLike = "DELETE FROM likes WHERE `userid`=(?) AND `postid`=(?)"
 
     console.log(req.body)
@@ -303,17 +358,17 @@ app.get("/Ioniagram/GetFollowers/", async (req, res) => {
     const sqlGetFollowers = "SELECT * FROM relationships WHERE `followedUserid` = (?)"
 
     db.query(sqlGetFollowers, req.query.userid, async (err, data) => {
-        if(err){
+        if (err) {
             console.log("Get followers error: " + err)
             return res.json(err)
-        }else if(data.length > 0){
+        } else if (data.length > 0) {
             console.log("FOLLOWERS:")
             console.log(data)
             console.log("--------------------------------------------");
 
             return res.json(data)
 
-        }else{
+        } else {
             return res.json([])
         }
 
@@ -342,7 +397,7 @@ app.post('/Ioniagram/Follow/', async (req, res) => {
 
 
 
-app.delete('/Ioniagram/Unfollow/', async (req,res) =>{
+app.delete('/Ioniagram/Unfollow/', async (req, res) => {
     const sqlDeleteRelationship = "DELETE FROM relationships WHERE `followerUserid`=(?) AND `followedUserid`=(?)"
 
     console.log(req.body)

@@ -27,6 +27,16 @@ export function getPostsProfile(profileid) {
 
 }
 
+export function getExplorePosts() {
+  console.log("HI")
+  const url = "http://localhost:8081/Ioniagram/ExplorePosts/"
+
+  return axios.get(url)
+    .then((res) =>
+      res.data
+    )
+}
+
 //COMMENTS
 export function getComments(postid) {
   const url = "http://localhost:8081/Ioniagram/GetComments" + "/?postid=" + postid
