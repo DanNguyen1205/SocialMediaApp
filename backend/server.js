@@ -165,19 +165,19 @@ app.get("/Ioniagram/GetPosts/", async (req, res) => {
     //Get posts for everyone the user follows
     //Inner join posts and relationships and then get all posts where the followerUserId is of the req.param.userid
     const sqlGetPosts = "SELECT p.*, fullName, idusers FROM posts p INNER JOIN users u ON (p.userid = u.idusers) INNER JOIN relationships r ON (r.followeduserid = u.idusers OR p.userid = (?)) WHERE followerUserid = (?) OR p.userid = (?)"
-    const sqlGetPosts2 = "SELECT p.*, fullName, idusers FROM posts p JOIN users u ON (u.idusers = p.userid) LEFT JOIN relationships r ON (p.userid = r.followedUserid) WHERE r.followerUserid = (?) or p.userid = (?)"
+    const sqlGetPosts2 = "SELECT p.*, fullName, idusers FROM posts p JOIN users u ON (u.idusers = p.userid) LEFT JOIN relationships r ON (p.userid = r.followedUserid) WHERE r.followerUserid = (?) or p.userid = (?) ORDER BY createdAt DESC"
     getPosts(sqlGetPosts2, [req.query.userid, req.query.userid], res)
 })
 
 app.get("/Ioniagram/GetPostsProfile/", async (req, res) => {
-    const sqlGetPosts = "SELECT p.*, fullName FROM posts p INNER JOIN users u ON (p.userid = u.idusers) WHERE userid=(?)"
+    const sqlGetPosts = "SELECT p.*, fullName FROM posts p INNER JOIN users u ON (p.userid = u.idusers) WHERE userid=(?) ORDER BY createdAt DESC"
 
     getPosts(sqlGetPosts, [req.query.userid], res)
 })
 
 app.get("/Ioniagram/ExplorePosts/", async (req, res) => {
     //Select randomly 100 posts
-    const sqlGetPosts = "SELECT p1.*, fullName FROM posts AS p1 INNER JOIN users u ON (p1.userid = u.idusers) JOIN (SELECT idposts FROM posts ORDER BY RAND() LIMIT 100) as p2 on p1.idposts=p2.idposts"
+    const sqlGetPosts = "SELECT p1.*, fullName FROM posts AS p1 INNER JOIN users u ON (p1.userid = u.idusers) JOIN (SELECT idposts FROM posts ORDER BY RAND() LIMIT 100) as p2 on p1.idposts=p2.idposts ORDER BY createdAt DESC"
 
     db.query(sqlGetPosts, async (err, data) => {
         if (err) {
