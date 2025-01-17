@@ -1,5 +1,12 @@
 import axios, * as others from "axios"
 
+
+
+
+//Login signup
+
+
+
 //POSTS
 export function createPost({ formData, userid }) {
   const url = "http://localhost:8081/Ioniagram/Post" + "/?userid=" + userid
@@ -37,7 +44,7 @@ export function getExplorePosts() {
     )
 }
 
-export function deletePost({userid, postid}){
+export function deletePost({ userid, postid }) {
 
   const url = "http://localhost:8081/Ioniagram/DeletePost/"
   return axios.delete(url, {
@@ -62,7 +69,7 @@ export function createComment({ body }) {
   return axios.post(url, body)
 }
 
-export function deleteComment({userid, commentid}){
+export function deleteComment({ userid, commentid }) {
   const url = "http://localhost:8081/Ioniagram/DeleteComment/"
   return axios.delete(url, {
     data: {

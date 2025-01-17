@@ -34,7 +34,7 @@ export const Home = () => {
     mutationFn: createPost,
     onSuccess: data => {
       queryClient.invalidateQueries(["getPostQuery"], {exact:true})
-      navigate(0)
+      // navigate(0)
     }
   })
 

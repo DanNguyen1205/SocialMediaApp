@@ -43,9 +43,10 @@ const randomImageName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex'
 //Connection
 const db = mysql.createConnection({
     host: process.env.host,
-    user: process.env.username,
+    user: process.env.user,
     password: process.env.password,
-    database: process.env.database
+    database: process.env.database,
+    port: process.env.port
 })
 
 //ENDPOINT LOG SIGNUP
@@ -95,6 +96,10 @@ app.post('/Ioniagram/Signup', (req, res) => {
 })
 
 app.post('/Ioniagram/Login', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+
     const sqlGetLogin = "SELECT * FROM users WHERE `email` = ?";
 
     db.query(sqlGetLogin, [req.body.email], (err, data) => {
@@ -254,8 +259,6 @@ async function getPosts(sqlStatement, id, res) {
 }
 
 app.delete('/Ioniagram/DeletePost/', async (req, res) => {
-
-    console.log("TEEESEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEST DB")
     const sqlDeletePost = "DELETE FROM posts WHERE `userid`=(?) AND `idposts`=(?)"
 
     console.log(req.body)
@@ -280,10 +283,10 @@ app.get("/Ioniagram/GetComments/", async (req, res) => {
             console.log("Get comments error: " + err)
             return res.json(err)
         } else if (data.length > 0) {
-            console.log("COMMENTS FOR, POSTID: " + req.query.postid)
+            // console.log("COMMENTS FOR, POSTID: " + req.query.postid)
 
             console.log(data)
-            console.log("--------------------------------------------");
+            // console.log("--------------------------------------------");
 
             return res.json(data)
         } else {
@@ -337,7 +340,7 @@ app.get("/Ioniagram/GetLikes/", async (req, res) => {
             console.log("Get likes error: " + err)
             return res.json(err)
         } else if (data.length > 0) {
-            console.log("LIKES FOR, POSTID:" + req.query.postid)
+            // console.log("LIKES FOR, POSTID:" + req.query.postid)
             console.log(data)
 
             return res.json(data)
@@ -394,9 +397,9 @@ app.get("/Ioniagram/GetFollowers/", async (req, res) => {
             console.log("Get followers error: " + err)
             return res.json(err)
         } else if (data.length > 0) {
-            console.log("FOLLOWERS:")
-            console.log(data)
-            console.log("--------------------------------------------");
+            // console.log("FOLLOWERS:")
+            // console.log(data)
+            // console.log("--------------------------------------------");
 
             return res.json(data)
 

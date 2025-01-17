@@ -37,7 +37,7 @@ export const Profile = () => {
         mutationFn: createPost,
         onSuccess: data => {
             queryClient.invalidateQueries(["getPostsProfileQuery", id], { exact: true })
-            navigate(0)
+            // navigate(0)
         }
     })
 

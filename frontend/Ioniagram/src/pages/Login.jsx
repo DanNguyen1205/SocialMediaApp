@@ -31,7 +31,7 @@ export const Login = () => {
 
   async function onSubmit(data) {
 
-    axios.post("http://localhost:8081/Ioniagram/Login", data)
+    axios.post("http://localhost:8081/Ioniagram/Login", data,)
     .then((res) =>{ 
       if(res.data != null){
         auth.login(data)

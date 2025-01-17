@@ -1,0 +1,39 @@
+version: "3.8"
+services:
+  backend:
+    build: ./backend
+    container_name: backend_c
+    ports:
+      - '8081:8081'
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword  # Replace with your actual root password
+      - DB_NAME=ioniagram
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql_c
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword  # Replace with your actual root password
+      MYSQL_DATABASE: ioniagram
+    ports:
+      - "3306:3306"
+    command: --init-file /docker-entrypoint-initdb.d/init.sql
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Mount init.sql to Docker volume
+
+  frontend: 
+    build: ./frontend/Ioniagram
+    container_name: frontend_c
+    ports:
+      - '3000:3000'
+    stdin_open: true
+    tty: true
+
+volumes:
+  mysql_data:
